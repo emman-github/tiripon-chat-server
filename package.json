@@ -1,0 +1,20 @@
+{
+  "name": "chat",
+  "version": "1.0.0",
+  "description": "Sample Server and Chat",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "*",
+    "request": "^2.88.0",
+    "socket.io": "*"
+  },
+  "engines": {
+    "node": "10.x"
+  },
+  "author": "Emmanuel Hernandez",
+  "license": "ISC"
+}
