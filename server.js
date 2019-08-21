@@ -7,16 +7,23 @@ var connections = [];
 var port = process.env.PORT || 3000;
 
 server.listen(port, function() {
-  console.log('Server running in port' + port);
+  console.log('Server is running in port ' + port);
 }); 
+
+const controller = 'Android_Api/';
+// const baseUrl = 'https://tiripon.net/';
+const baseUrl = 'https://www.sandbox.baldpuppiessolutions.com/';
+
  
 //server.listen(3000);
+// var room = 'room_1';
 
+var groupChatRooms  = [];
+var directChatRooms = [];
 
 var request = require('request'); 
 
 app.get("/url", (req, res, next) => {
-  var url = 'https://www.tiripon.net/Android_Api_Speaker/get_users';
 
   request(url, function (error, response, body) {
     console.log('error:', error); // Print the error if one occurred
@@ -29,20 +36,140 @@ app.get('/', function(req, res) {
     res.sendFile(__dirname + '/index.html');
 });
 
-io.sockets.on('connection', function(socket) {
+io.sockets.on('connection', onConnection);
+
+/* FUNCTIONS */
+function onConnection(socket) { 
+
     connections.push(socket);
-    console.log('Connected: %s sockets connected', connections.length);
+    //console.log('Connected: %s sockets connected', connections.length); 
+    
+    socket.on('join group chat', function(user) { 
+        var room = user.event_id;  
 
-    // Disconnect
-    socket.on('disconnect', function() {
-        connections.splice(connections.indexOf(socket), 1);
-        console.log('Disconnected: %s sockets connected', connections.length);        
-    }); 
+        if (!groupChatRooms.includes(room)) {
+            socket.join(room);
+            groupChatRooms.push(room);
+            console.log('room: ' + room); 
+        } else {
+            console.log('room: ' + room);
+        }
 
-    socket.on('send message', function(data) {
-        console.log(data);
-        io.sockets.emit('new message', {msg: data});
+        console.log(groupChatRooms);
+
+        // var clients = io.sockets.adapter.rooms[room];
+        // console.log(clients);
+
+        getGroupChatMessages().then(messages => {
+            socket.emit('get group chat messages', {'messages': messages});
+        }); 
     });
 
-    
-});
+
+    socket.on('send group chat message', function(message) { 
+        var room = message.event_id;   
+        var message = message.message; 
+
+        saveGroupChatMessage(message).then(response => {  
+            io.sockets.in(room).emit('receive group chat message', {'message': message}); 
+        }); 
+    });
+
+
+    socket.on('disconnect', function() {
+        var clients = Object.keys(io.sockets.sockets);  
+        var joinedRoom = socket.room; 
+        
+        //console.log(clients);
+
+        socket.leave(joinedRoom);
+        groupChatRooms.pop(joinedRoom);
+        connections.pop(joinedRoom);
+
+       
+
+        
+
+        //console.log('Disconnected: %s sockets connected', connections.length);        
+    }); 
+
+    // socket.on('join direct chat', function(user) {
+    //     console.log(user);
+    // })
+
+    // getGroupChatMessages().then(messages => {
+    //     //console.log(messages);
+    //     console.log(room);
+    //     io.sockets.in(room).emit('new room', {room: socket.room, messages: messages}); 
+    //     connections.push(socket);
+    //     //console.log('Connected: %s sockets connected', connections.length); 
+    // }).catch(error => {
+    //     console.log(error);
+    // }); 
+
+    // // Disconnect
+    // socket.on('disconnect', function() {
+    //     socket.leave(socket.room);
+    //     connections.splice(connections.indexOf(socket), 1);
+    //     //console.log('Disconnected: %s sockets connected', connections.length);        
+    // }); 
+
+    // socket.on('send message', function(message) { 
+    //     //console.log(message); 
+    //     saveNewMessage(message).then(response => {
+    //       //console.log(response);
+    //       io.sockets.in(socket.room).emit('new message', message.message); 
+    //     });
+    //     //console.log(socket.room);
+        
+    // });
+
+
+}  
+ 
+function getGroupChatMessages(room) { 
+    var promise = new Promise(function(resolve, reject) {  
+
+        const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/read_all_chat_message';
+
+        request(url, function (error, response, body) {
+            
+                // console.log('error:', error); // Print the error if one occurred
+                // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                // console.log(body);
+                body = JSON.parse(body);
+                resolve(body); 
+        }); 
+    }, error => {
+        reject(error);
+    });
+
+    return promise; 
+}
+
+function saveGroupChatMessage(message) {
+
+    var promise = new Promise(function(resolve, reject) {  
+        // console.log(message);
+        const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/insert_chat_message';
+
+        request.post({url, form: {'message': message}}, function (error, response, body) {
+            if (response.statusCode === 200) {
+                //console.log('error:', error); // Print the error if one occurred
+                //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                //console.log(body);
+                body = JSON.parse(body);
+                resolve(body);  
+            } else if (response.statusCode === 500) {
+                //console.log('error:', error); // Print the error if one occurred
+                //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                console.log(body);
+            }
+        }); 
+    }, error => {
+        reject(error);
+    });
+
+    return promise; 
+}
+

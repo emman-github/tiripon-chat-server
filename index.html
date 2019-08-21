@@ -12,7 +12,9 @@
   </style>
 </head>
 <body>
+    
     <div class="container">
+      <h1 id="room"></h1>
         <div class="row">
             <div class="col-md-4">
                 <h3>Online Users</h3>
@@ -36,26 +38,103 @@
     </div>
     <script type="text/javascript">
         $(function() {
-            var socket = io.connect();
-            //alert(1);
-
+            var socket = io.connect(); 
             var $messageForm = $('#messageForm');
-
             var $message = $('#message');
             var $chat = $('#chat');
+
+            var room = Math.floor(Math.random() * 10) + 0;  
+
+            socket.emit('join group chat', {
+                'event_id': room,
+                'user_id': 128,
+                'designation_id':  3,
+                'message': 1,
+                'date': 1,
+                'time': 1               
+            });
+
+            // socket.emit('join direct chat', {
+            //     'eventId': 2,
+            //     'userId': 2,
+            //     'designationId': 2,
+            //     'message': 2,
+            //     'date': 2,
+            //     'time': 2               
+            // });
+
+            socket.on('get group chat messages', function(messages) {
+                // alert(messages);
+                console.log(messages);
+
+                $.each(messages.messages, function(index, message) {
+                    $chat.append('<div>' + message.message + '</div>');
+                }); 
+            });
+
+            socket.on('receive group chat message', function(message) {
+                // alert(1);
+                // alert(1);
+                // console.log(message);
+                // // alert(message);
+                $chat.append('<div>' + message.message + '</div>');
+                // console.log(messages);
+
+                // $.each(messages.messages, function(index, message) {
+                //     $chat.append('<div>' + message.message + '</div>');
+                // }); 
+            });
 
             $messageForm.submit(function(e) {
                 e.preventDefault();
                 console.log('Submitted');
 
-                socket.emit('send message', $message.val());
+                socket.emit('send group chat message', {
+                    'event_id': room,
+                    'user_id': 128,
+                    'designation_id': 3,
+                    'message': $message.val(),
+                    'date': '2019/07/22',
+                    'time': '01:19:02PM'
+                });
 
                 $message.val('');
             });
 
-            socket.on('new message', function(data) {
-                $chat.append('<div>' + data.msg + '</div>');
-            });
+            // var $messageForm = $('#messageForm');
+
+            // var $message = $('#message');
+            // var $chat = $('#chat');
+
+            // $messageForm.submit(function(e) {
+            //     e.preventDefault();
+            //     console.log('Submitted');
+
+            //     socket.emit('send message', {
+            //         'event_id': 61,
+            //         'user_id': 128,
+            //         'designation_id':  3,
+            //         'message': $message.val(),
+            //         'date': '2019/07/22',
+            //         'time': '01:19:02PM'               
+            //     });
+
+            //     $message.val('');
+            // });
+
+            // socket.on('new message', function(message) { 
+            //   //console.log(message);
+            //   $chat.append('<div>' + message + '</div>');
+            // }); 
+
+            // socket.on('new room', function(data) {  
+            //   alert(1);
+            //   // console.log(data);
+            //   $.each(data.messages, function(index, message) {
+            //     $chat.append('<div>' + message.message + '</div>');
+            //   }); 
+            //   $('#room').text(data.room);
+            // }); 
         });
     </script>
 </body>
