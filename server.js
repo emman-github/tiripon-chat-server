@@ -6,7 +6,7 @@ var users = [];
 var connections = [];
 var port = process.env.PORT || 3000;
 
-server.listen(port, function() {
+server.listen(port, '192.168.1.11', function() {
   console.log('Server is running in port ' + port);
 }); 
 
@@ -40,13 +40,12 @@ io.sockets.on('connection', onConnection);
 
 /* FUNCTIONS */
 function onConnection(socket) { 
-
     connections.push(socket);
-    //console.log('Connected: %s sockets connected', connections.length); 
     
     socket.on('join group chat', function(user) { 
+        // console.log(user);
         var room = user.event_id;  
-
+        // console.log(room);
         if (!groupChatRooms.includes(room)) {
             socket.join(room);
             groupChatRooms.push(room);
@@ -57,40 +56,30 @@ function onConnection(socket) {
 
         console.log(groupChatRooms);
 
-        // var clients = io.sockets.adapter.rooms[room];
-        // console.log(clients);
+        getGroupChatMessages(room).then(groupChatMessages => {
+            console.log(groupChatMessages);
+            socket.emit('get group chat messages', groupChatMessages);
+        });
 
-        getGroupChatMessages().then(messages => {
-            socket.emit('get group chat messages', {'messages': messages});
-        }); 
+            // console.log(groupChatRooms);
+
+            // // var clients = io.sockets.adapter.rooms[room];
+            // // console.log(clients);
+
+            // getGroupChatMessages().then(messages => {
+            //     socket.emit('get group chat messages', {'messages': messages});
+            // }); 
     });
-
-
-    socket.on('send group chat message', function(message) { 
-        var room = message.event_id;   
-        var message = message.message; 
-
-        saveGroupChatMessage(message).then(response => {  
-            io.sockets.in(room).emit('receive group chat message', {'message': message}); 
-        }); 
-    });
-
-
+    socket.on('send group chat message', onSendGroupChatMessage);
     socket.on('disconnect', function() {
         var clients = Object.keys(io.sockets.sockets);  
-        var joinedRoom = socket.room; 
-        
-        //console.log(clients);
+        var joinedRoom = socket.room;  
 
         socket.leave(joinedRoom);
         groupChatRooms.pop(joinedRoom);
         connections.pop(joinedRoom);
 
-       
-
-        
-
-        //console.log('Disconnected: %s sockets connected', connections.length);        
+    //console.log('Disconnected: %s sockets connected', connections.length);        
     }); 
 
     // socket.on('join direct chat', function(user) {
@@ -126,19 +115,32 @@ function onConnection(socket) {
 
 
 }  
+
+function onSendGroupChatMessage(message) { 
+    var room = message.event_id;   
+    var message = message.message; 
+
+    saveGroupChatMessage(message).then(response => {  
+        io.sockets.in(room).emit('receive group chat message', {'message': message}); 
+    }); 
+}
+
+
+
  
-function getGroupChatMessages(room) { 
+function getGroupChatMessages(eventId) { 
+
     var promise = new Promise(function(resolve, reject) {  
-
-        const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/read_all_chat_message';
-
-        request(url, function (error, response, body) {
+        console.log(eventId);
+        //const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/read_all_chat_message';
+        const url = 'https://www.tiripon.net/Android_Api_Speaker/get_group_chat_messages';
+        request.post({url, form: {'event_id': eventId}}, function (error, response, body) {
             
-                // console.log('error:', error); // Print the error if one occurred
-                // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                // console.log(body);
-                body = JSON.parse(body);
-                resolve(body); 
+                console.log('error:', error); // Print the error if one occurred
+                console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                console.log(body);
+            body = JSON.parse(body); 
+            resolve(body); 
         }); 
     }, error => {
         reject(error);
