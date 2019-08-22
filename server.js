@@ -70,7 +70,16 @@ function onConnection(socket) {
             //     socket.emit('get group chat messages', {'messages': messages});
             // }); 
     });
-    socket.on('send group chat message', onSendGroupChatMessage);
+
+    socket.on('send group chat message', function (groupChatMessage) { 
+        console.log(groupChatMessage);
+        var room = groupChatMessage.event_id;    
+
+        saveGroupChatMessage(groupChatMessage).then(response => {  
+            io.sockets.in(room).emit('get saved group chat message', groupChatMessage); 
+        }); 
+    });
+
     socket.on('disconnect', function() {
         var clients = Object.keys(io.sockets.sockets);  
         var joinedRoom = socket.room;  
@@ -116,17 +125,6 @@ function onConnection(socket) {
 
 }  
 
-function onSendGroupChatMessage(message) { 
-    var room = message.event_id;   
-    var message = message.message; 
-
-    saveGroupChatMessage(message).then(response => {  
-        io.sockets.in(room).emit('receive group chat message', {'message': message}); 
-    }); 
-}
-
-
-
  
 function getGroupChatMessages(eventId) { 
 
@@ -149,17 +147,17 @@ function getGroupChatMessages(eventId) {
     return promise; 
 }
 
-function saveGroupChatMessage(message) {
+function saveGroupChatMessage(groupChatMessage) {
 
     var promise = new Promise(function(resolve, reject) {  
         // console.log(message);
-        const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/insert_chat_message';
+        const url = 'https://www.tiripon.net/Android_Api_Speaker/insert_group_chat_message';
 
-        request.post({url, form: {'message': message}}, function (error, response, body) {
+        request.post({url, form: groupChatMessage}, function (error, response, body) {
             if (response.statusCode === 200) {
-                //console.log('error:', error); // Print the error if one occurred
-                //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                //console.log(body);
+                // console.log('error:', error); // Print the error if one occurred
+                // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                console.log(body);
                 body = JSON.parse(body);
                 resolve(body);  
             } else if (response.statusCode === 500) {
