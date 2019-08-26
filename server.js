@@ -6,13 +6,13 @@ var users = [];
 var connections = [];
 var port = process.env.PORT || 3000;
 
-server.listen(port, '192.168.1.11', function() {
+server.listen(port, function() {
   console.log('Server is running in port ' + port);
 }); 
 
 const controller = 'Android_Api/';
-// const baseUrl = 'https://tiripon.net/';
-const baseUrl = 'https://www.sandbox.baldpuppiessolutions.com/';
+const baseUrl = 'https://tiripon.net/';
+//const baseUrl = 'https://www.sandbox.baldpuppiessolutions.com/';
 
  
 //server.listen(3000);
@@ -44,7 +44,7 @@ function onConnection(socket) {
     
     socket.on('join group chat', function(user) { 
         // console.log(user);
-        var room = user.event_id;  
+        var room = user.designation_id;  
         // console.log(room);
         if (!groupChatRooms.includes(room)) {
             socket.join(room);
@@ -71,9 +71,9 @@ function onConnection(socket) {
             // }); 
     });
 
-    socket.on('send group chat message', function (groupChatMessage) { 
+    socket.on('send group chat message', function(groupChatMessage) { 
         console.log(groupChatMessage);
-        var room = groupChatMessage.event_id;    
+        var room = groupChatMessage.designation_id;    
 
         saveGroupChatMessage(groupChatMessage).then(response => {  
             io.sockets.in(room).emit('get saved group chat message', groupChatMessage); 
@@ -126,17 +126,18 @@ function onConnection(socket) {
 }  
 
  
-function getGroupChatMessages(eventId) { 
+function getGroupChatMessages(designationId) { 
 
     var promise = new Promise(function(resolve, reject) {  
-        console.log(eventId);
+        console.log(designationId);
         //const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/read_all_chat_message';
         const url = 'https://www.tiripon.net/Android_Api_Speaker/get_group_chat_messages';
-        request.post({url, form: {'event_id': eventId}}, function (error, response, body) {
+        //const url = baseUrl + controller + 'get_group_chat_messages';
+        request.post({url, form: {'designation_id': designationId}}, function (error, response, body) {
             
-                console.log('error:', error); // Print the error if one occurred
-                console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                console.log(body);
+            console.log('error:', error); // Print the error if one occurred
+            console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+            console.log(body);
             body = JSON.parse(body); 
             resolve(body); 
         }); 
@@ -151,19 +152,22 @@ function saveGroupChatMessage(groupChatMessage) {
 
     var promise = new Promise(function(resolve, reject) {  
         // console.log(message);
+        //const url = baseUrl + controller + 'insert_group_chat_message';
         const url = 'https://www.tiripon.net/Android_Api_Speaker/insert_group_chat_message';
 
         request.post({url, form: groupChatMessage}, function (error, response, body) {
             if (response.statusCode === 200) {
                 // console.log('error:', error); // Print the error if one occurred
                 // console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                console.log(body);
+                //console.log(body);
+                console.log('200!');
                 body = JSON.parse(body);
                 resolve(body);  
             } else if (response.statusCode === 500) {
+                console.log('500!');
                 //console.log('error:', error); // Print the error if one occurred
                 //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                console.log(body);
+                //console.log(body);
             }
         }); 
     }, error => {
