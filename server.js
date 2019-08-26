@@ -79,7 +79,7 @@ function onConnection(socket) {
         var room = groupChatMessage.designation_id;    
 
         saveGroupChatMessage(groupChatMessage).then(response => {  
-            io.sockets.in(room).emit('get saved group chat message', groupChatMessage); 
+            io.sockets.in(room).emit('get saved group chat message', response); 
         }); 
     });
 
