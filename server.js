@@ -45,14 +45,17 @@ function onConnection(socket) {
     socket.on('join group chat', function(user) { 
         // console.log(user);
         var room = user.designation_id;  
-         console.log(room);
+        console.log(room);
         if (!groupChatRooms.includes(room)) {
-            socket.join(room);
+
             groupChatRooms.push(room);
             console.log('room: ' + room); 
         } else {
             console.log('room: ' + room);
         }
+
+        socket.room = room;
+            socket.join(room);
 
         console.log(groupChatRooms);
 
