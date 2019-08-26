@@ -45,7 +45,7 @@ function onConnection(socket) {
     socket.on('join group chat', function(user) { 
         // console.log(user);
         var room = user.designation_id;  
-        // console.log(room);
+         console.log(room);
         if (!groupChatRooms.includes(room)) {
             socket.join(room);
             groupChatRooms.push(room);
@@ -130,9 +130,11 @@ function getGroupChatMessages(designationId) {
 
     var promise = new Promise(function(resolve, reject) {  
         console.log(designationId);
-        //const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api/read_all_chat_message';
-        const url = 'https://www.tiripon.net/Android_Api_Speaker/get_group_chat_messages';
+        const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api_Speaker/get_group_chat_messages';
+        //const url = 'https://www.tiripon.net/Android_Api_Speaker/get_group_chat_messages'; 
         //const url = baseUrl + controller + 'get_group_chat_messages';
+
+        // return promise;
         request.post({url, form: {'designation_id': designationId}}, function (error, response, body) {
             
             console.log('error:', error); // Print the error if one occurred
@@ -149,11 +151,12 @@ function getGroupChatMessages(designationId) {
 }
 
 function saveGroupChatMessage(groupChatMessage) {
-
+    //console.log(groupChatMessage);
     var promise = new Promise(function(resolve, reject) {  
         // console.log(message);
         //const url = baseUrl + controller + 'insert_group_chat_message';
-        const url = 'https://www.tiripon.net/Android_Api_Speaker/insert_group_chat_message';
+        //const url = 'https://www.tiripon.net/Android_Api_Speaker/insert_group_chat_message';
+        const url = 'https://www.sandbox.baldpuppiessolutions.com/Android_Api_Speaker/insert_group_chat_message';
 
         request.post({url, form: groupChatMessage}, function (error, response, body) {
             if (response.statusCode === 200) {
@@ -165,9 +168,9 @@ function saveGroupChatMessage(groupChatMessage) {
                 resolve(body);  
             } else if (response.statusCode === 500) {
                 console.log('500!');
-                //console.log('error:', error); // Print the error if one occurred
-                //console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-                //console.log(body);
+                console.log('error:', error); // Print the error if one occurred
+                console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+                console.log(body);
             }
         }); 
     }, error => {
